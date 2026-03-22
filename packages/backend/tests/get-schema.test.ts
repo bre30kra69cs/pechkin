@@ -1,0 +1,58 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import Fastify, { FastifyInstance } from 'fastify';
+import supertest from 'supertest';
+import { scraperRoutes } from '../src/model/routes.js';
+
+vi.mock('../src/model/schemaStore.js', () => ({
+  getAllSchemas: vi.fn(),
+  getSchema: vi.fn(),
+  createSchema: vi.fn(),
+  updateSchema: vi.fn(),
+  deleteSchema: vi.fn(),
+  schemaExists: vi.fn(),
+}));
+
+import { getSchema } from '../src/model/schemaStore.js';
+
+describe('GET /api/schemas/:name', () => {
+  let app: FastifyInstance;
+
+  beforeAll(async () => {
+    app = Fastify();
+    await app.register(scraperRoutes);
+    await app.ready();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('должен возвращать схему по имени', async () => {
+    const mockSchema = {
+      name: 'test-schema',
+      baseUrl: 'https://test.com',
+      items: [{ name: 'item1', selector: '.item' }],
+    };
+    vi.mocked(getSchema).mockReturnValue(mockSchema);
+
+    const response = await supertest(app.server)
+      .get('/api/schemas/test-schema')
+      .expect(200);
+
+    expect(response.body).toEqual(mockSchema);
+  });
+
+  it('должен возвращать 404 когда схема не найдена', async () => {
+    vi.mocked(getSchema).mockReturnValue(null);
+
+    const response = await supertest(app.server)
+      .get('/api/schemas/non-existent')
+      .expect(404);
+
+    expect(response.body).toEqual({ error: "Schema 'non-existent' not found" });
+  });
+});
