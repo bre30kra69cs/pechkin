@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "git-commit": {
+      "source": "wildwasser/opencode-agents",
+      "sourceType": "github",
+      "computedHash": "00c7366727170a22bf8673f56a725d9b7fd7f87b704accbc86b90fe92721346b"
+    }
+  }
+}
