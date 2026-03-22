@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "turbo run start",
     "dev": "turbo run dev",
     "build:backend": "turbo run build --filter=backend",
     "start:backend": "turbo run start --filter=backend"
