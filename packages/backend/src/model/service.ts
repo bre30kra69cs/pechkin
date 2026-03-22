@@ -71,7 +71,7 @@ export class ScrapeService {
   }
 
   getJob(id: string): ScrapeJob | undefined {
-    return getJob(id);
+    return getJob(id) ?? undefined;
   }
 }
 

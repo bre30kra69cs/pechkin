@@ -46,6 +46,9 @@ pids/
 *.seed
 *.pid.lock
 
+# Database
+data/
+
 # Compiled binary/addons
 *.d.ts
 !*.d.ts.map

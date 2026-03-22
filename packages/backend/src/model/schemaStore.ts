@@ -1,56 +1,49 @@
-import { readFileSync, writeFileSync, unlinkSync, readdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { getDatabase } from '../db/database.js';
 import type { ScraperSchema } from '../types/ScraperSchema.js';
 import type { SchemaListItem } from '../types/SchemaListItem.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const schemasDir = join(__dirname, '../schemas');
+interface SchemaRow {
+  id: string;
+  name: string;
+  base_url: string;
+  items: string;
+  created_at: string;
+  updated_at: string;
+}
 
-const schemaCache = new Map<string, ScraperSchema>();
-
-function getFilePath(name: string): string {
-  return join(schemasDir, `${name}.json`);
+function rowToSchema(row: SchemaRow): ScraperSchema {
+  return {
+    name: row.name,
+    baseUrl: row.base_url,
+    items: JSON.parse(row.items),
+  };
 }
 
 export function getSchema(name: string): ScraperSchema | null {
-  if (schemaCache.has(name)) {
-    return schemaCache.get(name)!;
-  }
-
-  const filePath = getFilePath(name);
-
-  if (!existsSync(filePath)) {
+  const db = getDatabase();
+  const row = db.prepare('SELECT * FROM schemas WHERE name = ?').get(name) as SchemaRow | undefined;
+  
+  if (!row) {
     return null;
   }
 
-  try {
-    const content = readFileSync(filePath, 'utf-8');
-    const schema = JSON.parse(content) as ScraperSchema;
-    schemaCache.set(name, schema);
-    return schema;
-  } catch {
-    return null;
-  }
+  return rowToSchema(row);
 }
 
 export function getAllSchemas(): SchemaListItem[] {
-  const files = readdirSync(schemasDir).filter(
-    (f) => f.endsWith('.json') && f !== 'index.json'
-  );
-
-  return files.map((file) => {
-    const name = file.replace('.json', '');
-    const schema = getSchema(name);
-    return {
-      name: schema?.name || name,
-      baseUrl: schema?.baseUrl || '',
-    };
-  });
+  const db = getDatabase();
+  const rows = db.prepare('SELECT name, base_url FROM schemas').all() as { name: string; base_url: string }[];
+  
+  return rows.map((row) => ({
+    name: row.name,
+    baseUrl: row.base_url,
+  }));
 }
 
 export function schemaExists(name: string): boolean {
-  return existsSync(getFilePath(name));
+  const db = getDatabase();
+  const row = db.prepare('SELECT 1 FROM schemas WHERE name = ?').get(name);
+  return !!row;
 }
 
 export function createSchema(schema: ScraperSchema): { success: true } | { success: false; error: string } {
@@ -58,11 +51,20 @@ export function createSchema(schema: ScraperSchema): { success: true } | { succe
     return { success: false, error: `Schema '${schema.name}' already exists` };
   }
 
-  const filePath = getFilePath(schema.name);
-  writeFileSync(filePath, JSON.stringify(schema, null, 2), 'utf-8');
-  schemaCache.set(schema.name, schema);
+  const db = getDatabase();
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
 
-  return { success: true };
+  try {
+    db.prepare(`
+      INSERT INTO schemas (id, name, base_url, items, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, schema.name, schema.baseUrl, JSON.stringify(schema.items), now, now);
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: `Failed to create schema: ${error}` };
+  }
 }
 
 export function updateSchema(
@@ -77,17 +79,23 @@ export function updateSchema(
     return { success: false, error: `Schema '${schema.name}' already exists` };
   }
 
-  const oldFilePath = getFilePath(name);
-  const newFilePath = getFilePath(schema.name);
+  const db = getDatabase();
+  const now = new Date().toISOString();
 
-  if (oldFilePath !== newFilePath) {
-    unlinkSync(oldFilePath);
+  try {
+    if (name !== schema.name) {
+      db.prepare('DELETE FROM schemas WHERE name = ?').run(name);
+    }
+
+    db.prepare(`
+      INSERT INTO schemas (id, name, base_url, items, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(crypto.randomUUID(), schema.name, schema.baseUrl, JSON.stringify(schema.items), now, now);
+    
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: `Failed to update schema: ${error}` };
   }
-
-  writeFileSync(newFilePath, JSON.stringify(schema, null, 2), 'utf-8');
-  schemaCache.set(schema.name, schema);
-
-  return { success: true };
 }
 
 export function deleteSchema(
@@ -97,9 +105,12 @@ export function deleteSchema(
     return { success: false, error: `Schema '${name}' not found` };
   }
 
-  const filePath = getFilePath(name);
-  unlinkSync(filePath);
-  schemaCache.delete(name);
+  const db = getDatabase();
 
-  return { success: true };
+  try {
+    db.prepare('DELETE FROM schemas WHERE name = ?').run(name);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: `Failed to delete schema: ${error}` };
+  }
 }

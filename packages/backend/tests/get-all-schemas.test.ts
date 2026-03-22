@@ -3,6 +3,20 @@ import Fastify, { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
 import { scraperRoutes } from '../src/model/routes.js';
 
+vi.mock('../src/db/database.js', () => ({
+  initDatabase: vi.fn(),
+  getDatabase: vi.fn(() => mockDb),
+  migrateFromJson: vi.fn(() => 0),
+  closeDatabase: vi.fn(),
+}));
+
+const mockDb = {
+  prepare: vi.fn(),
+  exec: vi.fn(),
+  pragma: vi.fn(),
+  transaction: vi.fn((fn: () => void) => fn()),
+};
+
 vi.mock('../src/model/schemaStore.js', () => ({
   getAllSchemas: vi.fn(),
   getSchema: vi.fn(),
