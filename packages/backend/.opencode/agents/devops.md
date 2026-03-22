@@ -1,6 +1,7 @@
 ---
 description: DevOps инженер проекта Pechkin
 mode: subagent
+model: opencode/big-pickle
 permission:
   write:
     "packages/backend/**": "allow"

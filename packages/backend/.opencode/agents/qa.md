@@ -1,6 +1,7 @@
 ---
 description: Test engineer for backend
 mode: subagent
+model: opencode/big-pickle
 permission:
   write:
     "packages/backend/**": "allow"

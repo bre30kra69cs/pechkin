@@ -2,6 +2,7 @@
 description: Reviews code for quality and best practices
 mode: subagent
 temperature: 0.1
+model: opencode/big-pickle
 tools:
   write: false
   edit: false
