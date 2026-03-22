@@ -1,16 +1,31 @@
-import Database from 'better-sqlite3';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { readdirSync, existsSync, readFileSync, unlinkSync } from 'fs';
+import Database from "better-sqlite3";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import {
+  readdirSync,
+  existsSync,
+  readFileSync,
+  unlinkSync,
+  mkdirSync,
+} from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, '../../data/pechkin.db');
+
+const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? process.env.RAILWAY_VOLUME_MOUNT_PATH
+  : join(__dirname, "../../data");
+
+if (!existsSync(volumePath)) {
+  mkdirSync(volumePath, { recursive: true });
+}
+
+const dbPath = join(volumePath, "pechkin.db");
 
 let db: Database.Database;
 
 export function initDatabase(): Database.Database {
   db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
+  db.pragma("journal_mode = WAL");
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS schemas (
@@ -43,20 +58,20 @@ export function initDatabase(): Database.Database {
 
 export function getDatabase(): Database.Database {
   if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
+    throw new Error("Database not initialized. Call initDatabase() first.");
   }
   return db;
 }
 
 export function migrateFromJson(): number {
-  const schemasDir = join(__dirname, '../schemas');
-  
+  const schemasDir = join(__dirname, "../schemas");
+
   if (!existsSync(schemasDir)) {
     return 0;
   }
 
   const files = readdirSync(schemasDir).filter(
-    (f) => f.endsWith('.json') && f !== 'index.json'
+    (f) => f.endsWith(".json") && f !== "index.json",
   );
 
   if (files.length === 0) {
@@ -64,8 +79,10 @@ export function migrateFromJson(): number {
   }
 
   const dbInstance = getDatabase();
-  const existingCount = dbInstance.prepare('SELECT COUNT(*) as count FROM schemas').get() as { count: number };
-  
+  const existingCount = dbInstance
+    .prepare("SELECT COUNT(*) as count FROM schemas")
+    .get() as { count: number };
+
   if (existingCount.count > 0) {
     return 0;
   }
@@ -78,19 +95,19 @@ export function migrateFromJson(): number {
   const transaction = dbInstance.transaction(() => {
     for (const file of files) {
       const filePath = join(schemasDir, file);
-      const content = readFileSync(filePath, 'utf-8');
+      const content = readFileSync(filePath, "utf-8");
       const schema = JSON.parse(content);
-      
+
       const now = new Date().toISOString();
       const id = crypto.randomUUID();
-      
+
       insertStmt.run(
         id,
         schema.name,
         schema.baseUrl,
         JSON.stringify(schema.items),
         now,
-        now
+        now,
       );
 
       unlinkSync(filePath);
