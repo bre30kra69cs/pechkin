@@ -1,6 +1,6 @@
 ---
 description: Test engineer for backend
-mode: primary
+mode: subagent
 permission:
   write:
     "packages/backend/**": "allow"

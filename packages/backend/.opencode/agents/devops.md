@@ -1,10 +1,27 @@
 ---
 description: DevOps инженер проекта Pechkin
-mode: primary
+mode: subagent
+permission:
+  write:
+    "packages/backend/**": "allow"
+    "*": "deny"
+  edit:
+    "packages/backend/**": "allow"
+    "*": "deny"
+  read:
+    "packages/backend/**": "allow"
+    "*": "deny"
+  list:
+    "packages/backend/**": "allow"
+    "*": "deny"
+  bash:
+    "*": "ask"
+  external_directory:
+    "*": "deny"
 tools:
-  write: false
-  edit: false
-  bash: false
+  write: true
+  edit: true
+  bash: true
 ---
 
 Вы DevOps инженер. Фокус на:
