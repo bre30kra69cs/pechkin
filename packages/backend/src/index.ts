@@ -16,9 +16,11 @@ fastify.get("/api/hello", async () => {
 
 fastify.register(scraperRoutes);
 
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000 });
+    await fastify.listen({ port: PORT, host: '0.0.0.0' });
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
@@ -36,7 +38,7 @@ const stop = async () => {
   }
 };
 
-process.on('SIGINT', stop);
-process.on('SIGTERM', stop);
+process.on("SIGINT", stop);
+process.on("SIGTERM", stop);
 
 start();
