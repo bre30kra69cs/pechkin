@@ -1,5 +1,5 @@
-import { parseHtml, selectElements, getText, getAttribute } from './parser.js';
-import type { ScraperSchema } from '../types/ScraperSchema.js';
+import { parseHtml, selectElements, getText, getAttribute } from './parser';
+import type { ScraperSchema } from '../types/schema';
 
 export interface ExtractedItem {
   [key: string]: unknown;

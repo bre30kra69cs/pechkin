@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { scrapeService } from './service.js';
+import { scrapeService } from '../services/scraper';
 import {
   getAllSchemas,
   getSchema,
@@ -7,8 +7,8 @@ import {
   updateSchema,
   deleteSchema,
   schemaExists,
-} from './schemaStore.js';
-import type { ScraperSchema } from '../types/ScraperSchema.js';
+} from '../db/schemas';
+import type { ScraperSchema } from '../types/schema';
 
 export async function scraperRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get('/api/schemas', async () => {
@@ -127,4 +127,8 @@ export async function scraperRoutes(fastify: FastifyInstance): Promise<void> {
       return job;
     }
   );
+
+  fastify.get('/api/scraper/jobs', async () => {
+    return scrapeService.getAllJobs();
+  });
 }

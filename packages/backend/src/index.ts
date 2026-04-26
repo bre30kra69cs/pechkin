@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import { scraperRoutes } from "./model/routes.js";
+import { scraperRoutes } from "./routes/scraper.js";
 import { initDatabase, migrateFromJson, closeDatabase } from "./db/database.js";
 
 const fastify = Fastify({ logger: true });

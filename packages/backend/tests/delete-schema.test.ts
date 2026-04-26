@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import supertest from 'supertest';
-import { scraperRoutes } from '../src/model/routes.js';
+import { scraperRoutes } from '../src/routes/scraper';
 
 vi.mock('../src/db/database.js', () => ({
   initDatabase: vi.fn(),
@@ -17,7 +17,7 @@ const mockDb = {
   transaction: vi.fn((fn: () => void) => fn()),
 };
 
-vi.mock('../src/model/schemaStore.js', () => ({
+vi.mock('../src/db/schemas.js', () => ({
   getAllSchemas: vi.fn(),
   getSchema: vi.fn(),
   createSchema: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('../src/model/schemaStore.js', () => ({
   schemaExists: vi.fn(),
 }));
 
-import { deleteSchema } from '../src/model/schemaStore.js';
+import { deleteSchema } from '../src/db/schemas';
 
 describe('DELETE /api/schemas/:name', () => {
   let app: FastifyInstance;

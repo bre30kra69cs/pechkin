@@ -1,4 +1,7 @@
-import type { FieldSelector } from './FieldSelector.js';
+export interface FieldSelector {
+  selector: string;
+  attribute?: string;
+}
 
 export interface ScraperSchema {
   name: string;
@@ -7,4 +10,9 @@ export interface ScraperSchema {
     selector: string;
     fields: Record<string, string | FieldSelector>;
   };
+}
+
+export interface SchemaListItem {
+  name: string;
+  baseUrl: string;
 }

@@ -1,6 +1,5 @@
-import { getDatabase } from '../db/database.js';
-import type { ScraperSchema } from '../types/ScraperSchema.js';
-import type { SchemaListItem } from '../types/SchemaListItem.js';
+import { getDatabase } from './database';
+import type { ScraperSchema, SchemaListItem } from '../types/schema';
 
 interface SchemaRow {
   id: string;
@@ -22,7 +21,7 @@ function rowToSchema(row: SchemaRow): ScraperSchema {
 export function getSchema(name: string): ScraperSchema | null {
   const db = getDatabase();
   const row = db.prepare('SELECT * FROM schemas WHERE name = ?').get(name) as SchemaRow | undefined;
-  
+
   if (!row) {
     return null;
   }
@@ -33,7 +32,7 @@ export function getSchema(name: string): ScraperSchema | null {
 export function getAllSchemas(): SchemaListItem[] {
   const db = getDatabase();
   const rows = db.prepare('SELECT name, base_url FROM schemas').all() as { name: string; base_url: string }[];
-  
+
   return rows.map((row) => ({
     name: row.name,
     baseUrl: row.base_url,
@@ -60,7 +59,7 @@ export function createSchema(schema: ScraperSchema): { success: true } | { succe
       INSERT INTO schemas (id, name, base_url, items, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(id, schema.name, schema.baseUrl, JSON.stringify(schema.items), now, now);
-    
+
     return { success: true };
   } catch (error) {
     return { success: false, error: `Failed to create schema: ${error}` };
@@ -91,7 +90,7 @@ export function updateSchema(
       INSERT INTO schemas (id, name, base_url, items, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(crypto.randomUUID(), schema.name, schema.baseUrl, JSON.stringify(schema.items), now, now);
-    
+
     return { success: true };
   } catch (error) {
     return { success: false, error: `Failed to update schema: ${error}` };

@@ -1,8 +1,6 @@
 import { nanoid } from 'nanoid';
-import { getDatabase } from '../db/database.js';
-import type { ScrapeJob } from '../types/ScrapeJob.js';
-import type { ScrapeStats } from '../types/ScrapeStats.js';
-import type { JobStatus } from '../types/JobStatus.js';
+import { getDatabase } from './database';
+import type { ScrapeJob, ScrapeStats, JobStatus } from '../types/job';
 
 interface JobRow {
   id: string;
@@ -64,7 +62,7 @@ export function createJob(schemaName: string, url: string): ScrapeJob {
 export function getJob(id: string): ScrapeJob | null {
   const db = getDatabase();
   const row = db.prepare('SELECT * FROM jobs WHERE id = ?').get(id) as JobRow | undefined;
-  
+
   if (!row) {
     return null;
   }
@@ -84,7 +82,7 @@ export function updateJobData(
 ): void {
   const db = getDatabase();
   const row = db.prepare('SELECT stats FROM jobs WHERE id = ?').get(id) as { stats: string } | undefined;
-  
+
   if (row) {
     const currentStats = JSON.parse(row.stats);
     const newStats = { ...currentStats, ...stats };
@@ -96,9 +94,9 @@ export function updateJobData(
 export function completeJob(id: string, duration: string): void {
   const db = getDatabase();
   const now = new Date().toISOString();
-  
+
   const row = db.prepare('SELECT stats FROM jobs WHERE id = ?').get(id) as { stats: string } | undefined;
-  
+
   if (row) {
     const stats = JSON.parse(row.stats);
     stats.duration = duration;
@@ -110,9 +108,9 @@ export function completeJob(id: string, duration: string): void {
 export function failJob(id: string, error: string): void {
   const db = getDatabase();
   const now = new Date().toISOString();
-  
+
   const row = db.prepare('SELECT stats FROM jobs WHERE id = ?').get(id) as { stats: string } | undefined;
-  
+
   if (row) {
     const stats = JSON.parse(row.stats);
     stats.errors.push(error);
